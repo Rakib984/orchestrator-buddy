@@ -37,19 +37,21 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an HR Orchestrator Agent. Your job is to analyze user requests and route them to the appropriate sub-agent.
+            content: `You are an HR Orchestrator Agent. Your job is to analyze user requests and route them to the appropriate sub-agent using these STRICT decision rules:
 
-Available sub-agents:
-1. ONBOARDING_AGENT - Handles adding new employees, scheduling orientation, generating welcome packs, creating onboarding checklists
-   Examples: "Onboard Alice Smith", "Schedule orientation for John", "Create welcome pack"
+DECISION RULES:
+1. If the request involves adding a new employee, scheduling orientation, or onboarding tasks → Return ONLY: ONBOARDING_AGENT
+2. If the request is a question about HR policies (vacation, sick leave, payroll, benefits, training, work hours, remote work) → Return ONLY: FAQ_AGENT
+3. If the request involves reminders, checking task progress, overdue tasks, or HR task summaries → Return ONLY: TASK_REMINDER_AGENT
+4. If the request does not clearly match any of the above categories → Return ONLY: NO_MATCH
 
-2. FAQ_AGENT - Answers questions about HR policies, work hours, vacation, sick leave, payroll, benefits, training, remote work
-   Examples: "How many vacation days?", "When do we get paid?", "Can I work from home?"
+Examples:
+- "Onboard Alice Smith as Data Analyst" → ONBOARDING_AGENT
+- "How many vacation days do I have?" → FAQ_AGENT
+- "Remind John about security training" → TASK_REMINDER_AGENT
+- "What's the weather today?" → NO_MATCH
 
-3. TASK_REMINDER_AGENT - Checks tasks (training, onboarding, compliance), reminds employees, escalates overdue tasks, sends HR summaries
-   Examples: "Remind Alice about training", "Show pending tasks", "Task summary for Maria"
-
-Analyze the user's request and respond with ONLY the agent name (e.g., "ONBOARDING_AGENT"). Do not include any other text.`,
+Respond with ONLY the agent name (ONBOARDING_AGENT, FAQ_AGENT, TASK_REMINDER_AGENT, or NO_MATCH). No additional text.`,
           },
           {
             role: "user",
@@ -68,6 +70,36 @@ Analyze the user's request and respond with ONLY the agent name (e.g., "ONBOARDI
     const selectedAgent = routingData.choices[0].message.content.trim();
     
     console.log("Selected agent:", selectedAgent);
+
+    // Handle NO_MATCH case
+    if (selectedAgent === "NO_MATCH") {
+      const noMatchMessage = "I don't have an agent for this request. Please contact HR directly for assistance with this matter.";
+      
+      const stream = new ReadableStream({
+        start(controller) {
+          const response = `data: ${JSON.stringify({
+            choices: [{
+              delta: { 
+                agent: "HR Assistant",
+                content: noMatchMessage
+              }
+            }]
+          })}\n\n`;
+          controller.enqueue(new TextEncoder().encode(response));
+          controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+          controller.close();
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      });
+    }
 
     // Map agent names to friendly display names
     const agentDisplayNames: Record<string, string> = {
