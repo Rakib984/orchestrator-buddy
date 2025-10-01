@@ -17,7 +17,7 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hello! I'm your HR Assistant. I can help you with benefits, leave requests, company policies, and general HR questions. What can I help you with today?",
+      content: "Hello! I'm your HR Assistant powered by intelligent agent orchestration. I can help you with:\n\n🎯 **Onboarding** - Add new employees, schedule orientations, create welcome packs\n❓ **HR FAQ** - Answer policy questions about vacation, payroll, benefits, remote work\n✅ **Task Management** - Track and remind about training, compliance, and onboarding tasks\n\nWhat can I help you with today?",
       agentType: "HR Assistant",
     },
   ]);
@@ -206,7 +206,7 @@ const Index = () => {
 
         {/* Footer Info */}
         <div className="mt-4 text-center text-xs text-muted-foreground animate-in fade-in delay-300 duration-700">
-          <p>Try asking about benefits, leave policies, or company guidelines</p>
+          <p>Try: "Onboard Sarah Jones as Marketing Manager" or "How many vacation days?" or "Remind me about security training"</p>
         </div>
       </div>
     </div>
