@@ -1,0 +1,4 @@
+project_id = "bxlqaidbebigpjovsisa"
+
+[functions.hr-orchestrator]
+verify_jwt = false
